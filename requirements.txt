@@ -8,6 +8,7 @@ scikit-image
 kornia
 einops
 Pillow
+IPython
 
 tqdm
 prettytable
