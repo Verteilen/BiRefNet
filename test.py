@@ -103,10 +103,13 @@ for image_path in image_paths[:]:
         # com_img.paste(image, (image.width, 0))
         # com_img.paste(Image.fromarray(array_foreground_background), (image.width * 2, 0))
         # com_img.save(image_path.replace(src_dir, com_dir))
+
         # Output
         width, height = image.size
         black = Image.new('RGB', (width, height), (0, 0, 0))
-        Image.composite(image, black, pred_pil.resize(image.size)).save(image_path.replace(src_dir, final_dir))
+        mask = pred_pil.convert("L")
+        result = black.paste(image, (0, 0), mask)
+        result.save(image_path.replace(src_dir, final_dir))
 
 
 # Visualize the last sample:
