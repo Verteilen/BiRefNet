@@ -13,6 +13,7 @@ IPython
 tqdm
 prettytable
 tabulate
+pillow_lut
 
 huggingface-hub>0.25
 accelerate

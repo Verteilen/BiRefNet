@@ -1,3 +1,4 @@
+import sys
 from PIL import Image
 from pillow_lut import load_cube_file
 from argparse import ArgumentParser, Namespace
