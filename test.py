@@ -1,5 +1,6 @@
 # Imports
 from PIL import Image
+from pillow_lut import load_cube_file
 import torch
 from torchvision import transforms
 from IPython.display import display
@@ -10,9 +11,11 @@ from models.birefnet import BiRefNet
 
 from argparse import ArgumentParser, Namespace
 
+lut = load_cube_file("B2048_add.cube")
 parser = ArgumentParser(description="Training script parameters")
 parser.add_argument('-i', type=str, default = None)
 parser.add_argument('-o', type=str, default = None)
+parser.add_argument('-f', type=str, default = None)
 args = parser.parse_args(sys.argv[1:])
 
 # Load Model
@@ -56,12 +59,6 @@ transform_image = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-
-
-
-
-
-
 import os
 from glob import glob
 import numpy as np
@@ -71,9 +68,11 @@ autocast_ctx = torch.amp.autocast(device_type='cuda', dtype=[torch.float16, torc
 src_dir = args.i
 image_paths = sorted(glob(os.path.join(src_dir, '*')))
 dst_dir = args.o
+final_dir = args.f
 com_dir = '../comparisons'
 os.makedirs(dst_dir, exist_ok=True)
 os.makedirs(com_dir, exist_ok=True)
+os.makedirs(final_dir, exist_ok=True)
 for image_path in image_paths[:]:
     if image_path.endswith('.jpg') or image_path.endswith('.png'):
         print('Processing {} ...'.format(image_path))
@@ -104,6 +103,11 @@ for image_path in image_paths[:]:
         # com_img.paste(image, (image.width, 0))
         # com_img.paste(Image.fromarray(array_foreground_background), (image.width * 2, 0))
         # com_img.save(image_path.replace(src_dir, com_dir))
+        width, height = image.size
+        black = Image.new('RGB', (width, height), (0, 0, 0))
+        Image.composite(image, black, pred_pil).save(image_path.replace(src_dir, final_dir))
+        # Output
+
 
 
 # Visualize the last sample:

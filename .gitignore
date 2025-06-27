@@ -1,4 +1,7 @@
 # Custom
+test
+out
+final
 comparisons/
 preds-*/
 *.onnx
