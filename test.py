@@ -71,7 +71,6 @@ dst_dir = args.o
 final_dir = args.f
 com_dir = '../comparisons'
 os.makedirs(dst_dir, exist_ok=True)
-os.makedirs(com_dir, exist_ok=True)
 os.makedirs(final_dir, exist_ok=True)
 for image_path in image_paths[:]:
     if image_path.endswith('.jpg') or image_path.endswith('.png'):
@@ -93,23 +92,16 @@ for image_path in image_paths[:]:
         image_masked.putalpha(pred_pil.resize(image.size))
 
         # Comparison Results
-        # array_foreground = np.array(image_masked)[:, :, :3].astype(np.float32)
-        # array_mask = (np.array(image_masked)[:, :, 3:] / 255).astype(np.float32)
-        # array_background = np.zeros_like(array_foreground)
-        # array_background[:, :, :] = (0, 177, 64)
-        # array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
-        # com_img = Image.new('RGB', (image.width * 3, image.height))
+        array_foreground = np.array(image_masked)[:, :, :3].astype(np.float32)
+        array_mask = (np.array(image_masked)[:, :, 3:] / 255).astype(np.float32)
+        array_background = np.zeros_like(array_foreground)
+        array_background[:, :, :] = (0, 0, 0)
+        array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
+        com_img = Image.new('RGB', (image.width, image.height))
         # com_img.paste(pred_pil.resize(image.size), (0, 0))
         # com_img.paste(image, (image.width, 0))
-        # com_img.paste(Image.fromarray(array_foreground_background), (image.width * 2, 0))
-        # com_img.save(image_path.replace(src_dir, com_dir))
-
-        # Output
-        width, height = image.size
-        black = Image.new('RGB', (width, height), (0, 0, 0))
-        mask = pred_pil.convert("L")
-        result = black.paste(image, (0, 0), mask)
-        result.save(image_path.replace(src_dir, final_dir))
+        com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
+        com_img.save(image_path.replace(src_dir, final_dir))
 
 
 # Visualize the last sample:
