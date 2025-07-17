@@ -73,7 +73,7 @@ com_dir = '../comparisons'
 os.makedirs(dst_dir, exist_ok=True)
 os.makedirs(final_dir, exist_ok=True)
 for image_path in image_paths[:]:
-    if image_path.endswith('.jpg') or image_path.endswith('.png'):
+    if image_path.lower().endswith('.jpg') or image_path.lower().endswith('.png'):
         print('Processing {} ...'.format(image_path))
         image = Image.open(image_path)
         image = image.convert("RGB") if image.mode != "RGB" else image
