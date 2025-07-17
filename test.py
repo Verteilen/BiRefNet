@@ -103,18 +103,3 @@ for image_path in image_paths[:]:
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
         com_img.save(image_path.replace(src_dir, final_dir))
 
-
-# Visualize the last sample:
-# Scale proportionally with max length to 1024 for faster showing
-scale_ratio = 256 / max(image.size)
-scaled_size = (int(image.size[0] * scale_ratio), int(image.size[1] * scale_ratio))
-
-display(image.resize(scaled_size))
-display(pred_pil.resize(scaled_size))
-display(image_masked.resize(scaled_size))
-
-
-
-# Manually use `birefnet.half() can still speed up a little bit, which skip keeping the FP32 in certain operations.`
-with autocast_ctx, torch.no_grad():
-    preds = birefnet(input_images)[-1].sigmoid().to(torch.float32).cpu()
