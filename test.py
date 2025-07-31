@@ -16,6 +16,7 @@ parser = ArgumentParser(description="Training script parameters")
 parser.add_argument('-i', type=str, default = None)
 parser.add_argument('-o', type=str, default = None)
 parser.add_argument('-f', type=str, default = None)
+parser.add_argument('-s', type=str, default = None)
 args = parser.parse_args(sys.argv[1:])
 
 # Load Model
@@ -31,7 +32,11 @@ birefnet = BiRefNet.from_pretrained(
         'zhengpeng7/BiRefNet_HR',
         'zhengpeng7/BiRefNet',
         'zhengpeng7/BiRefNet-portrait',
-        'zhengpeng7/BiRefNet-legacy', 'zhengpeng7/BiRefNet-DIS5K-TR_TEs', 'zhengpeng7/BiRefNet-DIS5K', 'zhengpeng7/BiRefNet-HRSOD', 'zhengpeng7/BiRefNet-COD',
+        'zhengpeng7/BiRefNet-legacy', 
+        'zhengpeng7/BiRefNet-DIS5K-TR_TEs', 
+        'zhengpeng7/BiRefNet-DIS5K',
+        'zhengpeng7/BiRefNet-HRSOD', 
+        'zhengpeng7/BiRefNet-COD',
         'zhengpeng7/BiRefNet_lite',     # Modify the `bb` in `config.py` to `swin_v1_tiny`.
     ][6]
 )
@@ -66,12 +71,12 @@ from image_proc import refine_foreground
 
 autocast_ctx = torch.amp.autocast(device_type='cuda', dtype=[torch.float16, torch.bfloat16][0])
 src_dir = args.i
-image_paths = sorted(glob(os.path.join(src_dir, '*')))
+image_paths = sorted(glob(os.path.join(src_dir, '*'))) if args.s is None else [os.path.join(src_dir, args.s)]
 dst_dir = args.o
 final_dir = args.f
-com_dir = '../comparisons'
 os.makedirs(dst_dir, exist_ok=True)
 os.makedirs(final_dir, exist_ok=True)
+
 for image_path in image_paths[:]:
     if image_path.lower().endswith('.jpg') or image_path.lower().endswith('.png'):
         print('Processing {} ...'.format(image_path))
@@ -98,8 +103,6 @@ for image_path in image_paths[:]:
         array_background[:, :, :] = (0, 0, 0)
         array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
         com_img = Image.new('RGB', (image.width, image.height))
-        # com_img.paste(pred_pil.resize(image.size), (0, 0))
-        # com_img.paste(image, (image.width, 0))
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
         com_img.save(image_path.replace(src_dir, final_dir))
 
