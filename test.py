@@ -92,7 +92,7 @@ for image_path in image_paths[:]:
 
         # Show Results
         pred_pil = transforms.ToPILImage()(pred)
-        pred_pil.resize(image.size).save(image_path.replace(src_dir, dst_dir))
+        pred_pil.resize(image.size).save(image_path.replace(src_dir, dst_dir), compress_level=0)
 
         image_masked = refine_foreground(image, pred_pil)
         image_masked.putalpha(pred_pil.resize(image.size))
@@ -105,5 +105,5 @@ for image_path in image_paths[:]:
         array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
         com_img = Image.new('RGB', (image.width, image.height))
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
-        com_img.save(image_path.replace(src_dir, final_dir))
+        com_img.save(image_path.replace(src_dir, final_dir), compress_level=0)
 
