@@ -103,6 +103,7 @@ for image_path in image_paths[:]:
         array_background[:, :, :] = (0, 0, 0)
         array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
         com_img = Image.new('RGB', (image.width, image.height))
+        com_img = com_img.filter(lut)
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
-        com_img.filter(lut).save(image_path.replace(src_dir, final_dir))
+        com_img.save(image_path.replace(src_dir, final_dir))
 
