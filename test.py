@@ -38,7 +38,7 @@ birefnet = BiRefNet.from_pretrained(
         'zhengpeng7/BiRefNet-HRSOD', 
         'zhengpeng7/BiRefNet-COD',
         'zhengpeng7/BiRefNet_lite',     # Modify the `bb` in `config.py` to `swin_v1_tiny`.
-    ][6]
+    ][0]
 )
 
 # # Option-3: Loading model and weights from local disk:
@@ -59,7 +59,7 @@ print('BiRefNet is ready to use.')
 
 # Input Data
 transform_image = transforms.Compose([
-    transforms.Resize((1024, 1024)),
+    transforms.Resize((2048, 2048)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
