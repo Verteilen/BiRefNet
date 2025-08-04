@@ -81,6 +81,7 @@ for image_path in image_paths[:]:
     if image_path.lower().endswith('.jpg') or image_path.lower().endswith('.png'):
         print('Processing {} ...'.format(image_path))
         image = Image.open(image_path)
+        image = image.filter(lut)
         image = image.convert("RGB") if image.mode != "RGB" else image
         input_images = transform_image(image).unsqueeze(0).to(device)
 
@@ -103,7 +104,6 @@ for image_path in image_paths[:]:
         array_background[:, :, :] = (0, 0, 0)
         array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
         com_img = Image.new('RGB', (image.width, image.height))
-        image = image.filter(lut)
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
         com_img.save(image_path.replace(src_dir, final_dir))
 
