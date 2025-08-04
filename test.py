@@ -98,12 +98,12 @@ for image_path in image_paths[:]:
 
         # Comparison Results
         array_foreground = np.array(image_masked)[:, :, :3].astype(np.float32)
-        array_mask = (np.array(image_masked)[:, :, 3:] / 255).astype(np.float32)
-        array_background = np.zeros_like(array_foreground)
+        array_mask = (np.array(image_masked)[:, :, 3:] / 255).astype(np.float32) # mask
+        array_background = np.zeros_like(array_foreground) # all black
         array_background[:, :, :] = (0, 0, 0)
         array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
         com_img = Image.new('RGB', (image.width, image.height))
-        com_img = com_img.filter(lut)
+        Image = Image.filter(lut)
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
         com_img.save(image_path.replace(src_dir, final_dir))
 
