@@ -13,10 +13,10 @@ from argparse import ArgumentParser, Namespace
 
 lut = load_cube_file("B2048_add.cube")
 parser = ArgumentParser(description="Training script parameters")
-parser.add_argument('-i', type=str, default = None)
-parser.add_argument('-o', type=str, default = None)
-parser.add_argument('-f', type=str, default = None)
-parser.add_argument('-s', type=str, default = None)
+parser.add_argument('-i', type=str, default = None) # Input
+parser.add_argument('-o', type=str, default = None) # Mask Output
+parser.add_argument('-f', type=str, default = None) # Final Output
+parser.add_argument('-s', type=str, default = None) # Folders, If none then deep search
 args = parser.parse_args(sys.argv[1:])
 
 # Load Model
@@ -71,7 +71,7 @@ from image_proc import refine_foreground
 
 autocast_ctx = torch.amp.autocast(device_type='cuda', dtype=[torch.float16, torch.bfloat16][0])
 src_dir = args.i
-image_paths = sorted(glob(os.path.join(src_dir, '*'))) if args.s is None else [os.path.join(src_dir, args.s)]
+image_paths = sorted(glob(os.path.join(src_dir, '**/*'))) if args.s is None else [os.path.join(src_dir, args.s)]
 dst_dir = args.o
 final_dir = args.f
 os.makedirs(dst_dir, exist_ok=True)
