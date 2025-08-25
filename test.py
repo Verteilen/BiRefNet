@@ -69,6 +69,11 @@ from glob import glob
 import numpy as np
 from image_proc import refine_foreground
 
+def folder_vaild(o):
+    of = os.path.dirname(os.path.abspath(o))
+    if os.path.exists(of) == False:
+        os.mkdir(of)
+
 autocast_ctx = torch.amp.autocast(device_type='cuda', dtype=[torch.float16, torch.bfloat16][0])
 src_dir = args.i
 image_paths = sorted(glob(os.path.join(src_dir, '**/*'))) if args.s is None else [os.path.join(src_dir, args.s)]
@@ -92,7 +97,9 @@ for image_path in image_paths[:]:
 
         # Show Results
         pred_pil = transforms.ToPILImage()(pred)
-        pred_pil.resize(image.size).save(image_path.replace(src_dir, dst_dir), compress_level=0, optimize=False, quality=95, progressive=False)
+        mask_output = image_path.replace(src_dir, dst_dir)
+        folder_vaild(mask_output)
+        pred_pil.resize(image.size).save(mask_output, compress_level=0, optimize=False, quality=95, progressive=False)
 
         image_masked = refine_foreground(image, pred_pil)
         image_masked.putalpha(pred_pil.resize(image.size))
@@ -105,5 +112,7 @@ for image_path in image_paths[:]:
         array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
         com_img = Image.new('RGB', (image.width, image.height))
         com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
-        com_img.save(image_path.replace(src_dir, final_dir), compress_level=0, optimize=False, quality=95, progressive=False)
+        final_output = image_path.replace(src_dir, final_dir)
+        folder_vaild(final_output)
+        com_img.save(final_output, compress_level=0, optimize=False, quality=95, progressive=False)
 
