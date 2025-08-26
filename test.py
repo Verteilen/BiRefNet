@@ -1,4 +1,6 @@
 # Imports
+from concurrent.futures import ThreadPoolExecutor
+import multiprocessing
 from PIL import Image
 from pillow_lut import load_cube_file
 import torch
@@ -82,37 +84,46 @@ final_dir = args.f
 os.makedirs(dst_dir, exist_ok=True)
 os.makedirs(final_dir, exist_ok=True)
 
+def cal(image_path):
+    print('Processing {} ...'.format(image_path))
+    image = Image.open(image_path)
+    image = image.filter(lut)
+    image = image.convert("RGB") if image.mode != "RGB" else image
+    input_images = transform_image(image).unsqueeze(0).to(device)
+
+    # Prediction
+    with autocast_ctx, torch.no_grad():
+        preds = birefnet(input_images)[-1].sigmoid().to(torch.float32).cpu()
+    pred = preds[0].squeeze()
+
+    # Show Results
+    pred_pil = transforms.ToPILImage()(pred)
+    mask_output = image_path.replace(src_dir, dst_dir)
+    folder_vaild(mask_output)
+    pred_pil.resize(image.size).save(mask_output, compress_level=0, optimize=False, quality=95, progressive=False)
+
+    image_masked = refine_foreground(image, pred_pil)
+    image_masked.putalpha(pred_pil.resize(image.size))
+
+    # Comparison Results
+    array_foreground = np.array(image_masked)[:, :, :3].astype(np.float32)
+    array_mask = (np.array(image_masked)[:, :, 3:] / 255).astype(np.float32) # mask
+    array_background = np.zeros_like(array_foreground) # all black
+    array_background[:, :, :] = (0, 0, 0)
+    array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
+    com_img = Image.new('RGB', (image.width, image.height))
+    com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
+    final_output = image_path.replace(src_dir, final_dir)
+    folder_vaild(final_output)
+    com_img.save(final_output, compress_level=0, optimize=False, quality=95, progressive=False)
+
+
+image_paths2 = []
 for image_path in image_paths[:]:
     if image_path.lower().endswith('.jpg') or image_path.lower().endswith('.png'):
-        print('Processing {} ...'.format(image_path))
-        image = Image.open(image_path)
-        image = image.filter(lut)
-        image = image.convert("RGB") if image.mode != "RGB" else image
-        input_images = transform_image(image).unsqueeze(0).to(device)
-
-        # Prediction
-        with autocast_ctx, torch.no_grad():
-            preds = birefnet(input_images)[-1].sigmoid().to(torch.float32).cpu()
-        pred = preds[0].squeeze()
-
-        # Show Results
-        pred_pil = transforms.ToPILImage()(pred)
-        mask_output = image_path.replace(src_dir, dst_dir)
-        folder_vaild(mask_output)
-        pred_pil.resize(image.size).save(mask_output, compress_level=0, optimize=False, quality=95, progressive=False)
-
-        image_masked = refine_foreground(image, pred_pil)
-        image_masked.putalpha(pred_pil.resize(image.size))
-
-        # Comparison Results
-        array_foreground = np.array(image_masked)[:, :, :3].astype(np.float32)
-        array_mask = (np.array(image_masked)[:, :, 3:] / 255).astype(np.float32) # mask
-        array_background = np.zeros_like(array_foreground) # all black
-        array_background[:, :, :] = (0, 0, 0)
-        array_foreground_background = (array_foreground * array_mask + array_background * (1 - array_mask)).astype(np.uint8)
-        com_img = Image.new('RGB', (image.width, image.height))
-        com_img.paste(Image.fromarray(array_foreground_background), (0, 0))
-        final_output = image_path.replace(src_dir, final_dir)
-        folder_vaild(final_output)
-        com_img.save(final_output, compress_level=0, optimize=False, quality=95, progressive=False)
-
+        image_paths2.append(image_path)
+        
+with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+    futures = [executor.submit(cal, image) for image in image_paths2]
+    for future in futures:
+        future.result()
